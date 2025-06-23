@@ -1,189 +1,175 @@
+
 # Telco Customer Churn Project
 
-From Kaggle CLI Extraction to AWS BI Reporting and Machine Learning Prediction
-
-## Table of Contents
-
-- [Overview](#overview)
-- [Tools and Technologies](#tools-and-technologies)
-- [Project Structure](#project-structure)
-- [ETL Process](#etl-process)
-- [Descriptive Analysis](#descriptive-analysis)
-- [Predictive Analysis](#predictive-analysis)
-- [AWS Integration](#aws-integration)
-- [Final Deliverables](#final-deliverables)
-- [How to Run Locally](#how-to-run-locally)
-
 ## Overview
+This project explores customer churn in a telecom company using a full-stack Business Intelligence approach. It combines ETL, cloud-based analytics, and predictive modeling to uncover why customers leave and to forecast future churn risk.
 
-This project explores customer churn patterns in a telecom company. It combines cloud-based visualization with machine learning models to extract insights and predict churn behavior.
-
-We used a structured pipeline:
-- Extracted data using Kaggle CLI
-- Cleaned and engineered features with Python
-- Uploaded data to Amazon S3 using manifest files
-- Visualized churn insights with AWS QuickSight
-- Built machine learning models (Random Forest, Logistic Regression)
-- Evaluated churn prediction accuracy and model performance
+---
 
 ## Tools and Technologies
+- **Languages**: Python (Pandas, Scikit-learn)
+- **Cloud**: AWS S3, Amazon QuickSight
+- **Visualization**: AWS QuickSight
+- **Data Source**: Kaggle (Telco Customer Churn)
+- **Version Control**: Git & GitHub
 
-- Python (Pandas, NumPy, Scikit-learn, Matplotlib, Seaborn)
-- AWS S3, AWS QuickSight
-- Git and GitHub
-- Kaggle CLI, JSON Manifest
+---
 
 ## Project Structure
-
 ```
 telco_churn_project/
-├── Data/
-│   ├── WA_Fn-UseC_-Telco-Customer-Churn.csv
-│   ├── processed_telco.csv
-│   ├── predicted_results.csv
-│   ├── combined_churn_predictions.csv
-├── Scripts/
-│   ├── download_telco.py
-│   ├── preprocess_telco.py
-│   ├── train_model.py
-│   ├── merge_and_export.py
-│   ├── manifests/*.json
-├── Visuals/
-│   └── *.png
-└── README.md
+│
+├── Data/                       # Raw and processed datasets
+├── Scripts/                    # Python scripts for ETL and ML
+├── Visuals/                    # Saved images from QuickSight
+├── Docs/                       # Optional reports
+├── README.md                   # This file
 ```
+
+---
 
 ## ETL Process
 
-### 1. Data Extraction
+### 1. Extract
+- Install Kaggle:  
+  ```bash
+  pip install kaggle
+  ```
+- Place `kaggle.json` in `~/.kaggle/` and set permissions:
+  ```bash
+  chmod 600 ~/.kaggle/kaggle.json
+  ```
+- Download the dataset using CLI:  
+  ```bash
+  kaggle datasets download -d blastchar/telco-customer-churn
+  ```
+- Unzip and move into `Data/`
 
-Kaggle CLI was used to download the dataset:
+### 2. Transform
+- Remove missing values (`TotalCharges`)
+- Convert `SeniorCitizen` to binary
+- Create grouped features:
+  - `TenureGroup`: Binned into 12-month ranges
+  - `MonthlyChargeGroup`: Low, Medium, High
 
-```bash
-pip install kaggle
-kaggle datasets download -d blastchar/telco-customer-churn
-unzip telco-customer-churn.zip
-```
+Script used: `preprocess_telco.py`
 
-### 2. Data Cleaning
+### 3. Load
+- Final files saved to:
+  - `processed_telco.csv`
+  - `predicted_results.csv`
+  - `combined_churn_predictions.csv`
 
-- Standardized column names
-- Converted TotalCharges to float
-- Handled missing values and dropped duplicates
+- Each file is uploaded to S3 using corresponding manifest:
+  - `telco_manifest.json`
+  - `telco_pred_manifest.json`
+  - `combined_churn_manifest.json`
 
-### 3. Feature Engineering
-
-- Created tenure groups and charge bins
-- Encoded churn as binary
-- Prepared for machine learning input
-
-### 4. File Exports
-
-- `processed_telco.csv`: Cleaned version
-- `predicted_results.csv`: Prediction + features
-- `combined_churn_predictions.csv`: Final merged output
-
-### 5. S3 Upload and Manifest
-
-Data was uploaded to Amazon S3 using manifest files:
-
-```json
-{
-  "fileLocations": [{"URIs": ["s3://bucket/combined_churn_predictions.csv"]}],
-  "globalUploadSettings": {
-    "format": "CSV", "delimiter": ",", "textqualifier": """, "containsHeader": "true"
-  }
-}
-```
+---
 
 ## Descriptive Analysis
 
-### Churn by Contract Type
-**Visual Type:** Bar Chart  
-**Insight:** 1,659 customers with month-to-month contracts churned, while only 174 with one-year and 63 with two-year contracts churned.  
-**Interpretation:** Month-to-month plans present the highest churn risk. Longer contracts significantly improve retention, suggesting customer commitment duration is a strong churn factor.
+### 📊 Churn by Contract Type  
+![Churn by Contract Type](Visuals/churn_by_contract_type.png)  
+**Insight**: Customers on month-to-month contracts are far more likely to churn compared to those on one-year or two-year contracts. This indicates short-term customers may feel less committed or face service dissatisfaction early on.
 
-### Churn by Internet Service
-**Visual Type:** Bar Chart  
-**Insight:** 1,309 fiber optic customers churned versus 459 DSL and 110 with no internet service.  
-**Interpretation:** Fiber optic customers show higher churn, possibly due to service reliability or pricing issues. This group should be a focus for quality and support improvements.
+---
 
-### Churn by Tenure Group
-**Visual Type:** Bar Chart  
-**Insight:** Most churn occurred in the 0–12 month range, accounting for over 1,000 churned users.  
-**Interpretation:** New users are most at risk. Early-stage customer experience strategies are critical for improving retention in the first year.
+### 📊 Churn by Internet Service  
+![Churn by Internet Service](Visuals/churn_by_internet_service.png)  
+**Insight**: Fiber optic users showed significantly higher churn rates, possibly due to pricing or reliability concerns. Those without internet rarely churn — often older or low-usage customers.
 
-### Churn by Monthly Charges
-**Visual Type:** Histogram  
-**Insight:** Customers paying $61–$90 per month showed the highest churn counts, while lower and higher brackets had less.  
-**Interpretation:** Mid-range pricing may reflect a perceived lack of value. Tailored offers or added benefits could reduce churn in this billing range.
+---
 
-### Churn Percent by Contract & Gender
-**Visual Type:** Grouped Bar Chart  
-**Insight:** Female customers on month-to-month contracts had a churn rate of 43.74%.  
-**Interpretation:** While gender differences are slight, contract type remains dominant. Gender-based behavioral analysis may enhance targeting.
+### 📊 Churn by Tenure Group  
+![Churn by Tenure Group](Visuals/churn_by_tenure_group.png)  
+**Insight**: The highest churn occurs within the first 12 months. Retention improves significantly for long-tenured customers, reinforcing the need for onboarding incentives and early engagement.
 
-### Churn by Payment Method
-**Visual Type:** Bar Chart  
-**Insight:** Customers paying by electronic check made up the largest share of churners at 1,074 users.  
-**Interpretation:** Electronic check usage may correlate with less engagement or higher financial risk. Encouraging more reliable payment methods could stabilize retention.
+---
+
+### 📊 Churn by Monthly Charges  
+![Churn by Monthly Charges](Visuals/churn_by_monthly_charges.png)  
+**Insight**: Customers paying $61–$90 churn the most. This price range might be perceived as poor value, possibly indicating a pricing-to-value mismatch.
+
+---
+
+### 📊 Churn Percent by Contract & Gender  
+![Churn by Contract and Gender](Visuals/churn_by_contract_gender.png)  
+**Insight**: Gender has little effect on churn, but month-to-month contracts drive churn across both groups. Slightly higher churn among female customers is observed, but likely not statistically significant.
+
+---
+
+### 📊 Churn by Payment Method  
+![Churn by Payment Method](Visuals/churn_by_payment_method.png)  
+**Insight**: Customers using electronic checks churn far more often than those using bank transfers or credit cards. This could reflect a tech-savvy but less financially stable demographic.
 
 ---
 
 ## Predictive Analysis
 
-### Average Predicted Churn by Contract Type
-**Visual Type:** Bar Chart  
-**Insight:** Month-to-month customers had a predicted churn rate of 0.18, one-year customers 0.19, and two-year customers 0.20.  
-**Interpretation:** The increase in predicted churn for longer contracts is unexpected. It may indicate dissatisfaction over time among loyal customers, warranting deeper lifecycle analysis.
+### 🤖 Predicted Churn by Contract Type  
+![RF Churn by Contract Type](Visuals/predicted_churn_by_contract_type_rf.png)  
+**Insight**: The Random Forest model predicted churn probability highest for month-to-month customers, confirming descriptive trends. Long-term contracts had minimal predicted churn.
 
-### Predicted Churn by Monthly Charge Groups
-**Visual Type:** Horizontal Bar Chart  
-**Insight:** Customers paying under $10 had a predicted churn rate of 0.18; those paying more had a rate of 0.20.  
-**Interpretation:** Higher bills may cause dissatisfaction or cost sensitivity. Loyalty rewards or bundling might help retain high-value users.
+---
 
-### Churn Prediction Trend Across Tenure (3-Month Bins)
-**Visual Type:** Line Chart  
-**Insight:** Churn prediction starts near 0.2 for new customers and steadily declines as tenure increases.  
-**Interpretation:** Long-term customers are less likely to churn. Onboarding and early satisfaction programs are essential to improve early retention.
+### 🤖 RF Churn by Monthly Charges  
+![RF Monthly Group](Visuals/predicted_churn_by_monthly_group_rf.png)  
+**Insight**: Predictions peaked around $70–$90 range. Lower churn prediction was made for both high-end and low-end charge brackets, aligning with earlier analysis.
 
-### Confusion Matrix - Actual vs Predicted Churn (Random Forest)
-**Visual Type:** Table  
-**Insight:** The model correctly predicted 4,972 non-churners and only 65 churners. It misclassified 1,804 churners and 202 non-churners.  
-**Interpretation:** The model struggles with recall for churners. Addressing class imbalance or adding features (e.g., service complaints, usage history) may improve sensitivity.
+---
 
-### Predicted Churn by Internet Service and Actual Churn Status
-**Visual Type:** Stacked Bar Chart  
-**Insight:** DSL users had the highest retention at 57.21%, while fiber users churned more at 48.57%.  
-**Interpretation:** Although the model aligns with real churn trends, it may underestimate dissatisfaction in fiber customers. Additional service-related variables could improve accuracy.
+### 🤖 RF Tenure Trend  
+![RF Tenure Trend](Visuals/rf_tenure_trend.png)  
+**Insight**: A steady decrease in predicted churn as tenure increases. This validated the earlier tenure group trend and suggests customer loyalty strengthens with time.
+
+---
+
+### 🤖 Confusion Matrix  
+![Confusion Matrix](Visuals/confusion_matrix_rf.png)  
+**Insight**: The model had high true positives but also misclassified many churners as non-churners (false negatives). This indicates the need for feature refinement or deeper modeling.
+
+---
+
+### 🤖 RF Internet Type Prediction  
+![RF Internet Type](Visuals/rf_internet_churn.png)  
+**Insight**: DSL users surprisingly showed the highest predicted churn, while fiber optic churn was moderate. This may reflect satisfaction drop-offs in DSL users.
+
+---
 
 ## AWS Integration
+- Processed datasets uploaded to **Amazon S3**
+- Dashboards created in **Amazon QuickSight**
+- Manifest `.json` files used to point to specific CSVs for upload and refresh
 
-- All cleaned and predicted datasets were uploaded to Amazon S3
-- Dashboards were built in QuickSight using manifest-linked datasets
-- This enabled seamless integration of Python models with cloud BI
+---
 
 ## Final Deliverables
+- ✅ `processed_telco.csv`
+- ✅ `predicted_results.csv`
+- ✅ `combined_churn_predictions.csv`
+- ✅ Python scripts for download, preprocess, modeling
+- ✅ All charts saved in `Visuals/`
+- ✅ Complete README documentation
 
-- Clean dataset: `processed_telco.csv`
-- Model predictions: `predicted_results.csv`, `combined_churn_predictions.csv`
-- Manifest files for S3 to QuickSight
-- All visuals saved in `/Visuals/`
-- Full documentation in `README.md`
+---
 
 ## How to Run Locally
 
 ```bash
-# Step 1: Install dependencies
-pip install pandas scikit-learn kaggle
+# Clone the repo
+git clone https://github.com/orimsamm/telco-churn-intelligence.git
 
-# Step 2: Download dataset
-python Scripts/download_telco.py
-
-# Step 3: Clean and process
-python Scripts/preprocess_telco.py
-
-# Step 4: Train model and export results
-python Scripts/train_model.py
-python Scripts/merge_and_export.py
+# Move into scripts and run preprocessing
+cd Scripts
+python preprocess_telco.py
+python train_model.py
 ```
+
+---
+
+## Author  
+Samuel Orimogunje  
+Master's in Management Information Systems  
+Business Intelligence & Cloud Enthusiast
+
