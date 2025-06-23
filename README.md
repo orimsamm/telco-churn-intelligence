@@ -199,3 +199,43 @@ This manifest is used for QuickSight:
 6. Explore insights via dashboards
 
 ---
+
+## Predictive Analysis
+
+### Predicted Churn by Internet Service (Random Forest)
+![Predicted by Internet Service](Visuals/predicted_by_internet_actual_status_rf.png)
+
+**Insight:**  
+> Customers with **DSL** had a predicted churn rate of **42.79%**, while **fiber optic users** had slightly lower predicted churn at **48.57%**. The model highlights a clear link between internet type and likelihood of churn.
+
+---
+
+### Average Predicted Churn by Monthly Charges
+![Avg RF Churn by Monthly Charge Groups](Visuals/avg_rf_churn_by_monthly_charge_groups.png)
+
+**Insight:**  
+> Higher monthly charges correlated with higher churn probability. The average predicted churn for customers in the top pricing group was **0.20**, compared to **0.18** for lower charge groups.
+
+---
+
+### Churn Prediction Trend Across Tenure
+![Churn Prediction Tenure Trend](Visuals/churn_prediction_tenure_trend.png)
+
+**Insight:**  
+> The model predicts the **highest churn rates** in the early tenure months, steadily decreasing as tenure increases. This supports the finding that **early-stage customers** are most at risk of leaving.
+
+---
+
+### Confusion Matrix (Random Forest)
+![Confusion Matrix](Visuals/confusion_matrix_rf.png)
+
+**Insight:**  
+> The model correctly predicted **4,972 non-churns** and **65 churns**, but had **202 false positives** and **1,804 false negatives**. These metrics suggest good performance on non-churn but high missed churns.
+
+---
+
+### Average Predicted Churn by Contract Type
+![Avg Predicted by Contract](Visuals/avg_predicted_churn_by_contract.png)
+
+**Insight:**  
+> Month-to-month contracts showed the highest average predicted churn (**0.20**), followed by one-year (**0.19**) and two-year (**0.18**) contracts. Longer commitments are linked with retention.
